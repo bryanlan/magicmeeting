@@ -1,0 +1,29 @@
+{
+  "name": "outlook-calendar-mcp",
+  "version": "1.0.5",
+  "description": "MCP server for Outlook Calendar integration",
+  "main": "src/index.js",
+  "type": "module",
+  "author": "Meraj Mehrabi",
+  "bugs": "https://github.com/merajmehrabi/Outlook_Calendar_MCP/issues",
+  "license": "MIT",
+  "bin": {
+    "outlook-calendar-mcp": "./src/index.js"
+  },
+  "scripts": {
+    "start": "chcp 65001 >nul 2>&1 && node src/index.js",
+    "start:utf8": "chcp 65001 >nul 2>&1 && node src/index.js",
+    "test": "chcp 65001 >nul 2>&1 && node test-outlook-connection.js",
+    "test:outlook": "chcp 65001 >nul 2>&1 && node test-outlook-connection.js"
+  },
+  "keywords": [
+    "outlook",
+    "calendar",
+    "mcp",
+    "claude",
+    "Model Context Protocol"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.3"
+  }
+}

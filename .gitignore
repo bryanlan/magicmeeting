@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# User-specific config (contains personal email, contacts, local paths)
+.claude/config.md
+.claude/outlook-contacts.json
+.claude/outlook-polls.json
+.claude/settings.json
+.claude/settings.local.json
+
+# Tool results / temp files
+.claude/projects/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

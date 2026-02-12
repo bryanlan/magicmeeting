@@ -43,6 +43,8 @@ If OAuth/auth is required for the server, `/mcp` is also where authentication is
 
 ## Editing skills and config
 
+**CRITICAL: Always edit skills in THIS PROJECT's `.claude/skills/` folder, never `~/.claude/skills/`.** The project folder is the source of truth for version-controlled skill definitions.
+
 Keep edits to SKILL.md and CLAUDE.md **minimalist and crisp**. No verbose explanations or lengthy examples. One-liners preferred.
 
 ## Mistake handling (systemic fix first)

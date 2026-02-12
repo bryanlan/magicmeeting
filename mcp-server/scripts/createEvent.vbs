@@ -204,7 +204,20 @@ Function CreateCalendarEvent(subject, startDateTime, endDateTime, location, body
 
             Set wshShell = Nothing
         Else
-            ' Send the meeting request normally
+            ' Save first to get EntryID, then send
+            appointment.Save
+            If Err.Number <> 0 Then
+                OutputError "Failed to save meeting: " & Err.Description
+                WScript.Quit 1
+            End If
+
+            ' Verify we have an EntryID before sending
+            If appointment.EntryID = "" Then
+                OutputError "Meeting was not created (empty EntryID after save)"
+                WScript.Quit 1
+            End If
+
+            ' Now send the meeting request
             appointment.Send
         End If
     Else
@@ -219,6 +232,12 @@ Function CreateCalendarEvent(subject, startDateTime, endDateTime, location, body
 
     ' Return the EntryID as the event ID
     CreateCalendarEvent = appointment.EntryID
+
+    ' Final check - ensure we have a valid ID
+    If CreateCalendarEvent = "" Then
+        OutputError "Event creation failed (no EntryID returned)"
+        WScript.Quit 1
+    End If
 
     ' Clean up
     Set appointment = Nothing

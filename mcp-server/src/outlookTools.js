@@ -199,6 +199,18 @@ export function defineOutlookTools() {
       handler: async (eventDetails) => {
         try {
           const result = await createEvent(eventDetails);
+          // Validate that we got a real event ID
+          if (!result.eventId || !result.eventId.trim()) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: 'Error creating event: Event was not created (empty ID returned)'
+                }
+              ],
+              isError: true
+            };
+          }
           let message = `Event created successfully with ID: ${result.eventId}`;
           if (result.room) {
             message += `\nRoom: ${result.room} (${result.roomEmail})`;

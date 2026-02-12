@@ -8,6 +8,9 @@ argument-hint: "[to] [subject] (optional)"
 
 # Send Email (Requires explicit confirmation)
 
+## STOP ON ERRORS
+If something fails or user says it's wrong: **STOP. Do not retry or fix.** Diagnose root cause first. Get user approval before any corrective action. If in a subagent, RETURN to primary agent immediately.
+
 ## Preconditions
 - Ensure MCP server enabled: `/mcp enable <server-name>`
 - Resolve recipients:

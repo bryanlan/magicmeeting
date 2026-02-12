@@ -51,6 +51,7 @@ Keep edits to SKILL.md and CLAUDE.md **minimalist and crisp**. No verbose explan
 
 1) **STOP** - Do not attempt to fix the specific instance
 2) **Identify root cause** - What assumption, missing info, or incorrect tool usage caused this?
+   - **Do NOT guess.** If unsure, provide a research prompt for the user to investigate.
 3) **Update skill instructions** - Edit the relevant SKILL.md to prevent recurrence
 4) **WAIT** - Ask user for confirmation before proceeding to fix the specific instance
 

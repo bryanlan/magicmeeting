@@ -95,6 +95,16 @@ Edit `~/.claude/outlook-contacts.json`:
       "email": "jsmith@company.com",
       "aliases": ["James", "Jim"],
       "notes": "Weekly 1:1"
+    },
+    {
+      "name": "Alice Wong",
+      "email": "alice@company.com",
+      "aliases": ["Alice"]
+    },
+    {
+      "name": "Bob Chen",
+      "email": "bob@company.com",
+      "aliases": ["Bob"]
     }
   ],
   "groups": [
@@ -102,12 +112,14 @@ Edit `~/.claude/outlook-contacts.json`:
       "name": "PM Team",
       "email": "pmteam@company.com",
       "alias": "pmteam",
-      "members": ["alice@company.com", "bob@company.com"],
+      "members": ["Alice Wong", "Bob Chen"],
       "notes": "Product Management"
     }
   ]
 }
 ```
+
+Note: Group `members` are contact names (not emails) - they must exist in the contacts list.
 
 ## Requirements
 

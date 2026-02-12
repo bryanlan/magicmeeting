@@ -159,7 +159,7 @@ Use `add_attendee` to send a real invite instead.
 ## Address book (`~/.claude/outlook-contacts.json`)
 Structure:
 - `contacts[]`: name, email (lowercase), aliases
-- `groups[]`: name, email, members (email references)
+- `groups[]`: name, email (the DL address), members (contact names - must exist in contacts[])
 
 Lookup flow:
 1) Search contacts by name/alias
@@ -169,7 +169,7 @@ Lookup flow:
 
 Expanding DLs:
 - Use `mcp__outlook__expand_distribution_list`
-- Add missing members to contacts, update group.members
+- Add missing members to contacts first, then add their names to group.members
 
 ---
 

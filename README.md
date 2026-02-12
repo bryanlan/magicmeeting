@@ -164,6 +164,40 @@ Do the following steps in order:
 | `/send-email` | Compose and send email (with confirmation) |
 | `/lookup-contact` | Resolve names to email addresses |
 
+## Tip: Local Address Book
+
+The assistant maintains a local cache at `~/.claude/outlook-contacts.json` so it knows who you mean when you say "James" or "the PM team" without having to look them up every time.
+
+**How it works:**
+- First time you mention someone new, it queries the Global Address List and offers to save them
+- You can add nicknames/aliases (e.g., "PM team" → distribution list email)
+- Groups/distribution lists can be expanded and cached locally
+
+**To add contacts manually:**
+Edit `~/.claude/outlook-contacts.json`:
+```json
+{
+  "version": "1.2",
+  "contacts": [
+    {
+      "name": "James Smith",
+      "email": "jsmith@company.com",
+      "aliases": ["James", "Jim"],
+      "notes": "Weekly 1:1"
+    }
+  ],
+  "groups": [
+    {
+      "name": "PM Team",
+      "email": "pmteam@company.com",
+      "alias": "pmteam",
+      "members": ["alice@company.com", "bob@company.com"],
+      "notes": "Product Management"
+    }
+  ]
+}
+```
+
 ## License
 
 MIT

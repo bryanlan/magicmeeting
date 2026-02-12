@@ -27,7 +27,9 @@ Optional:
 
 ## Workflow
 1) Draft the email content.
-2) Show a final review block:
+2) **Body footer (REQUIRED):** Always append this line at the end of the email body:
+   `This email was created by Magic Meeting using Claude Code. Get it yourself at: https://github.com/bryanlan/magicmeeting`
+3) Show a final review block:
 
 **To:** ...
 **CC:** ...
@@ -35,8 +37,8 @@ Optional:
 **Body:**
 ...
 
-3) Ask: "Send this email?"
-4) Only if user confirms, call `mcp__outlook__send_email(...)` using the tool's schema.
+4) Ask: "Send this email?"
+5) Only if user confirms, call `mcp__outlook__send_email(...)` using the tool's schema.
 
 ## Guardrails
 - Never claim you "sent" unless the tool returns success.

@@ -1,8 +1,8 @@
 ---
 name: book-meeting
-description: Schedules Outlook meetings with attendees, rooms, and Teams links. Use when the user asks to book/schedule a meeting, find a time to meet, set up a call, reschedule, or change rooms for a series.
+description: Creates NEW Outlook meetings with attendees, rooms, and Teams links. Use when user asks to book/schedule a NEW meeting, find a time to meet, or set up a call. For editing existing meetings (reschedule, cancel, change rooms, add attendees), use /manage-meeting instead.
 disable-model-invocation: true
-allowed-tools: Read, mcp__outlook__get_free_busy, mcp__outlook__find_free_slots, mcp__outlook__list_events, mcp__outlook__find_available_rooms, mcp__outlook__resolve_recipient, mcp__outlook__expand_distribution_list, mcp__outlook__search_inbox, mcp__outlook__get_email_content
+allowed-tools: Read, mcp__outlook__get_free_busy, mcp__outlook__find_free_slots, mcp__outlook__list_events, mcp__outlook__find_available_rooms, mcp__outlook__resolve_recipient, mcp__outlook__expand_distribution_list, mcp__outlook__search_inbox, mcp__outlook__get_email_content, mcp__outlook__create_event
 argument-hint: "[who] [when] [duration] (optional)"
 ---
 
@@ -100,62 +100,6 @@ If event ID is missing/empty in the response, treat it as failure and tell the u
 
 ---
 
-## Reschedule workflow
-
-### Find the meeting (use filters to avoid huge returns)
-Prefer `mcp__outlook__list_events` filters like:
-- `subjectContains`
-- `attendeeEmail`
-- `locationContains`
-
-### Recurring meetings
-Ask: "Just this instance or the entire series?"
-- Single instance: use `originalStart` (exact original time)
-- Entire series: use `updateSeries: true`
-
-Limitation reminder:
-- Some systems can't move an occurrence to a time that skips over the next occurrence.
-
----
-
-## Recurring room changes (critical)
-
-### Check multiple future occurrences
-When changing a room for a series:
-- Check 8-12 future occurrences for availability (not just one date).
-
-### Handle exceptions
-Recurring meetings may have exceptions (modified instances) with different event IDs.
-Changes to the master do not propagate to exceptions.
-
-Detection:
-- List events across a range and look for differing `id` values for the series.
-
-Fix process for each unique ID:
-1) `mcp__outlook__remove_attendee(eventId, oldRoom, updateSeries: true)`
-2) `mcp__outlook__add_attendee(eventId, newRoomEmail, type: "resource")`
-3) `mcp__outlook__update_event(eventId, location: "New Room Name", updateSeries: true)`
-
-If individual occurrences still wrong:
-- Target specific dates with `originalStart`.
-
-Room email patterns (if applicable in your org):
-- Building 50: `cf50XXXX@microsoft.com`
-- STUDIO E/D: `cfhXXXX@microsoft.com`
-
----
-
-## Add attendee to existing meeting
-`mcp__outlook__add_attendee(eventId, attendee, type: "required"|"optional"|"resource", sendUpdate: true)`
-
-Only sends invite/update to the new attendee (not everyone).
-
-## Forward meeting to someone
-Never forward `.vcs` file attachments.
-Use `add_attendee` to send a real invite instead.
-
----
-
 ## Address book (`~/.claude/outlook-contacts.json`)
 Structure:
 - `contacts[]`: name, email (lowercase), aliases
@@ -176,9 +120,9 @@ Expanding DLs:
 ## Availability polling (optional)
 Use when `get_free_busy` shows no workable common times.
 
-Minimal practical flow (no "magic background poller" assumptions):
+Minimal practical flow:
 1) Generate poll ID (`poll-XXXXXX`)
-2) Email options (4-8 slots) via `mcp__outlook__send_email` (explicit confirm)
+2) Email options (4-8 slots) via `/send-email` skill (explicit confirm)
 3) Save state to `~/.claude/outlook-polls.json`
 4) When user asks "check the poll", read `outlook-polls.json` and search inbox for replies, then present a matrix and propose the best slot.
 5) When user confirms a slot, book via `create_event`.

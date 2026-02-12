@@ -60,7 +60,8 @@ Keep edits to SKILL.md and CLAUDE.md **minimalist and crisp**. No verbose explan
 ## Available skills (slash commands)
 
 - `/outlook-calendar` - view calendar, free/busy checks, date-range summaries
-- `/book-meeting` - scheduling workflow (availability, room, Teams link, recurring rules, poll option)
+- `/book-meeting` - create NEW meetings (availability, room, Teams link, poll option)
+- `/manage-meeting` - edit existing meetings (cancel, reschedule, add/remove attendees, change rooms)
 - `/search-email` - search mailbox and retrieve message content
 - `/send-email` - compose and send an email (explicit confirm)
 - `/lookup-contact` - resolve an email address + optionally add to contacts file

@@ -26,6 +26,51 @@ Claude Code skills and MCP server for Outlook calendar and email management on W
 - Maintains a personal contacts/aliases file for quick name resolution
 - Requires explicit confirmation before creating/modifying calendar events or sending email
 
+## Usage Examples
+
+Just talk naturally. Here are real examples:
+
+**Finding meeting times**
+```
+> Find me a meeting time tomorrow with Cassie, Ana, and Rose
+> Book a 30 min sync with Jerry next week
+> When can I meet with the PM team for an hour?
+```
+
+**Booking with details**
+```
+> Foo planning discussion, 30 min, find a room in building 50 floor 3, make it a Teams meeting
+> Schedule a 1:1 with Amanda, 25 minutes, subject "Weekly sync"
+```
+
+**Rescheduling**
+```
+> Reschedule my 1:1 with Ross to early next week
+> Move tomorrow's team lunch to Friday
+> Find a new time for the staff meeting - James can't make it
+```
+
+**Modifying meetings**
+```
+> Change the start time to 4:05
+> Update the PM lunch invite to say "meet at building 50 elevators 3rd floor"
+> Add Tucker to the planning meeting
+```
+
+**Calendar queries**
+```
+> What's on my calendar tomorrow?
+> Show me my meetings for next week
+> Am I free Friday afternoon?
+```
+
+**Email**
+```
+> Did Ross email me about rescheduling this week?
+> Search for emails from Cassie about the Bar announcement
+> Send Ana a quick note about the deadline change
+```
+
 ## Issues & Feedback
 
 Something not working? [Open an issue](https://github.com/bryanlan/magicmeeting/issues)

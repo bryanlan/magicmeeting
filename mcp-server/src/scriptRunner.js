@@ -131,7 +131,23 @@ export async function listEvents(startDate, endDate, calendar, limit, offset, co
 
 /**
  * Creates a new calendar event
- * @param {Object} eventDetails - Event details
+ * @param {Object} eventDetails - Event details including optional recurrence
+ * @param {string} eventDetails.subject - Event subject
+ * @param {string} eventDetails.startDate - Start date MM/DD/YYYY
+ * @param {string} eventDetails.startTime - Start time HH:MM AM/PM
+ * @param {string} eventDetails.endDate - End date (optional)
+ * @param {string} eventDetails.endTime - End time (optional)
+ * @param {string} eventDetails.location - Location (optional)
+ * @param {string} eventDetails.body - Description (optional)
+ * @param {boolean} eventDetails.isMeeting - Is meeting with attendees
+ * @param {string} eventDetails.attendees - Semicolon-separated emails
+ * @param {string} eventDetails.room - Room email (optional)
+ * @param {boolean} eventDetails.teamsMeeting - Create Teams link
+ * @param {string} eventDetails.recurrenceType - none/daily/weekly/monthly/yearly
+ * @param {number} eventDetails.recurrenceInterval - Every N periods
+ * @param {string} eventDetails.recurrenceDays - Comma-separated days for weekly (e.g., "monday,friday")
+ * @param {string} eventDetails.recurrenceEndDate - End date for series MM/DD/YYYY
+ * @param {number} eventDetails.recurrenceOccurrences - Number of occurrences
  * @returns {Promise<Object>} - Promise that resolves with the created event ID
  */
 export async function createEvent(eventDetails) {
@@ -177,6 +193,21 @@ export async function getAttendeeStatus(eventId, calendar) {
  */
 export async function deleteEvent(eventId, calendar) {
   return executeScript('deleteEvent', { eventId, calendar });
+}
+
+/**
+ * Cancels a meeting with an optional custom cancellation message
+ * Only works if you are the meeting organizer
+ * For recurring meetings: use occurrenceStart for one instance, or cancelSeries for entire series
+ * @param {string} eventId - Event ID (series master ID for recurring meetings)
+ * @param {string} occurrenceStart - For recurring: occurrence start datetime (MM/DD/YYYY HH:MM AM/PM)
+ * @param {boolean} cancelSeries - For recurring: cancel entire series (not just one instance)
+ * @param {string} comment - Custom cancellation message (optional)
+ * @param {string} calendar - Calendar name (optional)
+ * @returns {Promise<Object>} - Promise that resolves with the cancellation result
+ */
+export async function cancelEvent(eventId, occurrenceStart, cancelSeries, comment, calendar) {
+  return executeScript('cancelEvent', { eventId, occurrenceStart, cancelSeries, body: comment, calendar });
 }
 
 /**

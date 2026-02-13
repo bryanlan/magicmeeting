@@ -1,12 +1,14 @@
 ---
 name: book-meeting
 description: Creates NEW Outlook meetings with attendees, rooms, and Teams links. Use when user asks to book/schedule a NEW meeting, find a time to meet, or set up a call. For editing existing meetings (reschedule, cancel, change rooms, add attendees), use /manage-meeting instead.
-disable-model-invocation: true
 allowed-tools: Read, mcp__outlook__get_free_busy, mcp__outlook__find_free_slots, mcp__outlook__list_events, mcp__outlook__find_available_rooms, mcp__outlook__resolve_recipient, mcp__outlook__expand_distribution_list, mcp__outlook__search_inbox, mcp__outlook__get_email_content, mcp__outlook__create_event
 argument-hint: "[who] [when] [duration] (optional)"
 ---
 
 # Book Meeting Skill
+
+## ERROR? STOP.
+**Tool error? STOP. DO NOT WORKAROUND. DO NOT USE DIFFERENT TOOLS.** Tell user what failed. Wait.
 
 ## Preconditions
 - Ensure Outlook MCP server is enabled:
@@ -100,20 +102,54 @@ If event ID is missing/empty in the response, treat it as failure and tell the u
 
 ---
 
+## Recurring meetings
+
+To create a recurring meeting, add these parameters to `create_event`:
+
+| Parameter | Description |
+|-----------|-------------|
+| `recurrenceType` | `"daily"`, `"weekly"`, `"monthly"`, or `"yearly"` |
+| `recurrenceInterval` | Every N periods (default: 1) |
+| `recurrenceDays` | For weekly: comma-separated days (e.g., `"monday,wednesday,friday"`) |
+| `recurrenceEndDate` | End date `MM/DD/YYYY` (optional) |
+| `recurrenceOccurrences` | Number of occurrences (alternative to endDate) |
+
+If neither `recurrenceEndDate` nor `recurrenceOccurrences` is set, the series has no end date.
+
+**Example - weekly Friday meeting:**
+```
+mcp__outlook__create_event(
+  subject: "Team Sync",
+  startDate: "02/14/2026",
+  startTime: "10:00 AM",
+  endTime: "10:30 AM",
+  isMeeting: true,
+  attendees: "someone@example.com",
+  teamsMeeting: true,
+  recurrenceType: "weekly",
+  recurrenceDays: "friday"
+)
+```
+
+---
+
 ## Address book (`~/.claude/outlook-contacts.json`)
 Structure:
-- `contacts[]`: name, email (lowercase), aliases
-- `groups[]`: name, email (the DL address), members (contact names - must exist in contacts[])
+- `contacts[]`: name, email, aliases (array)
+- `groups[]`: name, email (DL address), aliases (array), members
 
-Lookup flow:
-1) Search contacts by name/alias
-2) Single match -> use silently with confirmation
-3) Multiple matches -> ask user to clarify
-4) No match -> ask for email, offer to save
+Lookup flow (search BOTH contacts AND groups):
+1) Search contacts by name or any alias (case-insensitive)
+2) Search groups by name or any alias (case-insensitive)
+3) Single match → use email silently
+4) Multiple matches → ask user to clarify
+5) No match → use `resolve_recipient` or ask for email
+
+**Example:** User says "invite sigma team" → find group with alias "sigma team" → use `coreospmsigma@microsoft.com`
 
 Expanding DLs:
 - Use `mcp__outlook__expand_distribution_list`
-- Add missing members to contacts first, then add their names to group.members
+- Add missing members to contacts, update group.members
 
 ---
 

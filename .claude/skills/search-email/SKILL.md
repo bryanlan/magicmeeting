@@ -7,6 +7,9 @@ argument-hint: "[keywords] (optional)"
 
 # Search Email
 
+## ERROR? STOP.
+**Tool error? STOP. DO NOT WORKAROUND. DO NOT USE DIFFERENT TOOLS.** Tell user what failed. Wait.
+
 ## Preconditions
 - If Outlook MCP tools are missing/unavailable: use `/mcp` and `/mcp enable <server-name>`.
 - Use `mcp__outlook__resolve_recipient` when the user provides a person name but no email.

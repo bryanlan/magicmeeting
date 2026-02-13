@@ -7,12 +7,28 @@ Set fso = CreateObject("Scripting.FileSystemObject")
 scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
 ExecuteGlobal fso.OpenTextFile(fso.BuildPath(scriptDir, "utils.vbs"), 1).ReadAll
 
+' Recurrence type constants
+Const olRecursDaily = 0
+Const olRecursWeekly = 1
+Const olRecursMonthly = 2
+Const olRecursYearly = 5
+
+' Day of week mask constants (for weekly recurrence)
+Const olSunday = 1
+Const olMonday = 2
+Const olTuesday = 4
+Const olWednesday = 8
+Const olThursday = 16
+Const olFriday = 32
+Const olSaturday = 64
+
 ' Main function
 Sub Main()
     ' Get command line arguments
     Dim subject, startDateStr, startTimeStr, endDateStr, endTimeStr, location, body, isMeeting, attendeesStr, calendarName
     Dim startDateTime, endDateTime, attendees
     Dim roomEmail, isTeamsMeeting
+    Dim recurrenceType, recurrenceInterval, recurrenceDays, recurrenceEndDateStr, recurrenceOccurrences
 
     ' Get and validate arguments
     subject = GetArgument("subject")
@@ -22,6 +38,13 @@ Sub Main()
     endTimeStr = GetArgument("endTime")
     location = GetArgument("location")
     isMeeting = LCase(GetArgument("isMeeting")) = "true"
+
+    ' Recurrence arguments
+    recurrenceType = LCase(GetArgument("recurrenceType"))
+    recurrenceInterval = GetArgument("recurrenceInterval")
+    recurrenceDays = LCase(GetArgument("recurrenceDays"))
+    recurrenceEndDateStr = GetArgument("recurrenceEndDate")
+    recurrenceOccurrences = GetArgument("recurrenceOccurrences")
 
     ' Read body from temp file if path provided, otherwise from command line
     Dim bodyFilePath
@@ -73,7 +96,7 @@ Sub Main()
     
     ' Create the event
     Dim eventId, roomName
-    eventId = CreateCalendarEvent(subject, startDateTime, endDateTime, location, body, isMeeting, attendees, calendarName, roomEmail, isTeamsMeeting, roomName)
+    eventId = CreateCalendarEvent(subject, startDateTime, endDateTime, location, body, isMeeting, attendees, calendarName, roomEmail, isTeamsMeeting, roomName, recurrenceType, recurrenceInterval, recurrenceDays, recurrenceEndDateStr, recurrenceOccurrences)
 
     ' Output success with the event ID and room info
     Dim json
@@ -108,11 +131,12 @@ Function ParseDateTime(dateStr, timeStr)
 End Function
 
 ' Creates a new calendar event with the specified properties
-Function CreateCalendarEvent(subject, startDateTime, endDateTime, location, body, isMeeting, attendees, calendarName, roomEmail, isTeamsMeeting, ByRef roomName)
+Function CreateCalendarEvent(subject, startDateTime, endDateTime, location, body, isMeeting, attendees, calendarName, roomEmail, isTeamsMeeting, ByRef roomName, recurrenceType, recurrenceInterval, recurrenceDays, recurrenceEndDateStr, recurrenceOccurrences)
     On Error Resume Next
 
     ' Create Outlook objects
     Dim outlookApp, namespace, calendar, appointment, i, recipient
+    Dim recPattern, dayMask
 
     ' Create Outlook application
     Set outlookApp = CreateOutlookApplication()
@@ -133,6 +157,59 @@ Function CreateCalendarEvent(subject, startDateTime, endDateTime, location, body
     appointment.Start = startDateTime
     appointment.End = endDateTime
     appointment.Body = body
+
+    ' Set up recurrence if specified
+    If recurrenceType <> "" And recurrenceType <> "none" Then
+        Set recPattern = appointment.GetRecurrencePattern()
+
+        ' Set recurrence type
+        Select Case recurrenceType
+            Case "daily"
+                recPattern.RecurrenceType = olRecursDaily
+            Case "weekly"
+                recPattern.RecurrenceType = olRecursWeekly
+            Case "monthly"
+                recPattern.RecurrenceType = olRecursMonthly
+            Case "yearly"
+                recPattern.RecurrenceType = olRecursYearly
+            Case Else
+                OutputError "Invalid recurrence type: " & recurrenceType
+                WScript.Quit 1
+        End Select
+
+        ' Set interval (default to 1)
+        If recurrenceInterval <> "" And IsNumeric(recurrenceInterval) Then
+            recPattern.Interval = CInt(recurrenceInterval)
+        Else
+            recPattern.Interval = 1
+        End If
+
+        ' Set days of week for weekly recurrence
+        If recurrenceType = "weekly" And recurrenceDays <> "" Then
+            dayMask = 0
+            If InStr(recurrenceDays, "sunday") > 0 Then dayMask = dayMask + olSunday
+            If InStr(recurrenceDays, "monday") > 0 Then dayMask = dayMask + olMonday
+            If InStr(recurrenceDays, "tuesday") > 0 Then dayMask = dayMask + olTuesday
+            If InStr(recurrenceDays, "wednesday") > 0 Then dayMask = dayMask + olWednesday
+            If InStr(recurrenceDays, "thursday") > 0 Then dayMask = dayMask + olThursday
+            If InStr(recurrenceDays, "friday") > 0 Then dayMask = dayMask + olFriday
+            If InStr(recurrenceDays, "saturday") > 0 Then dayMask = dayMask + olSaturday
+            If dayMask > 0 Then
+                recPattern.DayOfWeekMask = dayMask
+            End If
+        End If
+
+        ' Set end condition
+        If recurrenceEndDateStr <> "" Then
+            recPattern.PatternEndDate = ParseDate(recurrenceEndDateStr)
+        ElseIf recurrenceOccurrences <> "" And IsNumeric(recurrenceOccurrences) Then
+            recPattern.Occurrences = CInt(recurrenceOccurrences)
+        Else
+            recPattern.NoEndDate = True
+        End If
+
+        Set recPattern = Nothing
+    End If
 
     ' Set location - only use location parameter if no room provided
     ' (room resource attendees automatically populate location)
@@ -170,7 +247,7 @@ Function CreateCalendarEvent(subject, startDateTime, endDateTime, location, body
 
         ' Enable Teams meeting if requested - use UI automation
         If isTeamsMeeting Then
-            ' Display the appointment to access the ribbon
+            ' Display the appointment to access the ribbon (don't save first)
             appointment.Display
 
             ' Give Outlook time to fully render the window

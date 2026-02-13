@@ -9,6 +9,7 @@ import {
   getAttendeeStatus,
   getCalendars,
   deleteEvent,
+  cancelEvent,
   updateEvent,
   getFreeBusy,
   findAvailableRooms,
@@ -192,6 +193,26 @@ export function defineOutlookTools() {
           calendar: {
             type: 'string',
             description: 'Calendar name (optional)'
+          },
+          recurrenceType: {
+            type: 'string',
+            description: 'Recurrence pattern: "none", "daily", "weekly", "monthly", "yearly" (optional, defaults to none)'
+          },
+          recurrenceInterval: {
+            type: 'number',
+            description: 'Recurrence interval - every N days/weeks/months/years (optional, defaults to 1)'
+          },
+          recurrenceDays: {
+            type: 'string',
+            description: 'For weekly recurrence: comma-separated days (e.g., "monday,wednesday,friday")'
+          },
+          recurrenceEndDate: {
+            type: 'string',
+            description: 'End date for recurring series in MM/DD/YYYY format (optional, if not set series has no end)'
+          },
+          recurrenceOccurrences: {
+            type: 'number',
+            description: 'Number of occurrences for recurring series (alternative to recurrenceEndDate)'
           }
         },
         required: ['subject', 'startDate', 'startTime']
@@ -372,8 +393,8 @@ export function defineOutlookTools() {
             content: [
               {
                 type: 'text',
-                text: result.success 
-                  ? `Event deleted successfully` 
+                text: result.success
+                  ? `Event deleted successfully`
                   : `Failed to delete event`
               }
             ]
@@ -384,6 +405,63 @@ export function defineOutlookTools() {
               {
                 type: 'text',
                 text: `Error deleting event: ${error.message}`
+              }
+            ],
+            isError: true
+          };
+        }
+      }
+    },
+
+    // Cancel meeting with custom message
+    cancel_event: {
+      name: 'cancel_event',
+      description: 'Cancel a meeting with an optional custom cancellation message. Only works if you are the meeting organizer. For RECURRING meetings: use occurrenceStart to cancel one instance, or cancelSeries=true to cancel the entire series with notifications.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          eventId: {
+            type: 'string',
+            description: 'Event ID to cancel (for recurring meetings, this is the series master ID)'
+          },
+          occurrenceStart: {
+            type: 'string',
+            description: 'For recurring meetings: the start datetime of the specific occurrence to cancel (format: MM/DD/YYYY HH:MM AM/PM). Required unless cancelSeries is true.'
+          },
+          cancelSeries: {
+            type: 'boolean',
+            description: 'For recurring meetings: set to true to cancel the ENTIRE series (all occurrences) with notifications to attendees. Use with caution.'
+          },
+          comment: {
+            type: 'string',
+            description: 'Custom cancellation message to include in the notice sent to attendees (optional)'
+          },
+          calendar: {
+            type: 'string',
+            description: 'Calendar name (optional)'
+          }
+        },
+        required: ['eventId']
+      },
+      handler: async ({ eventId, occurrenceStart, cancelSeries, comment, calendar }) => {
+        try {
+          const result = await cancelEvent(eventId, occurrenceStart, cancelSeries, comment, calendar);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: result.success
+                  ? `Meeting canceled successfully${comment ? ' with custom message' : ''}`
+                  : `Failed to cancel meeting`
+              }
+            ]
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error canceling meeting: ${error.message}`
               }
             ],
             isError: true

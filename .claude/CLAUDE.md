@@ -1,3 +1,15 @@
+# STOP ON ANY ERROR OR PROBLEM
+
+**ERROR? STOP. DO NOT WORKAROUND. DO NOT PROCEED.**
+
+1. STOP immediately
+2. Tell user what failed
+3. WAIT for user to decide next step
+
+**DO NOT:** try alternatives, fix it yourself, use different tools, or proceed in any way.
+
+---
+
 # Outlook Assistant (Claude Code)
 
 This workspace configures Claude Code as an Outlook-centric assistant (calendar + email) via an MCP server.
@@ -47,6 +59,10 @@ If OAuth/auth is required for the server, `/mcp` is also where authentication is
 
 Keep edits to SKILL.md and CLAUDE.md **minimalist and crisp**. No verbose explanations or lengthy examples. One-liners preferred.
 
+## Continuous system improvement
+
+Constantly evaluate every interaction for opportunities to improve CLAUDE.md, SKILL.md files, or underlying code. Proactively suggest improvements to the user. **When user points out a system problem, fixing the system takes priority over fixing the immediate issue.**
+
 ## Mistake handling (systemic fix first)
 
 **DO NOT JUMP TO FIXING THE IMMEDIATE PROBLEM.** When a mistake happens:
@@ -54,8 +70,9 @@ Keep edits to SKILL.md and CLAUDE.md **minimalist and crisp**. No verbose explan
 1) **STOP** - Do not attempt to fix the specific instance
 2) **Identify root cause** - What assumption, missing info, or incorrect tool usage caused this?
    - **Do NOT guess.** If unsure, provide a research prompt for the user to investigate.
-3) **Update skill instructions** - Edit the relevant SKILL.md to prevent recurrence
-4) **WAIT** - Ask user for confirmation before proceeding to fix the specific instance
+3) **Update skill/code** - Edit the relevant SKILL.md or fix the underlying bug
+4) **WAIT** - Present the fix, ask user to confirm it looks correct
+5) **Ask permission** - Only retry the original operation after user explicitly approves
 
 ## Available skills (slash commands)
 

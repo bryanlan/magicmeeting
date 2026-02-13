@@ -1,12 +1,14 @@
 ---
 name: lookup-contact
 description: Resolves a person's email address via GAL or email history, and can add them to the local contacts file. Use for "look up", "find email for", or "add [name] to contacts".
-disable-model-invocation: true
 allowed-tools: Read, mcp__outlook__resolve_recipient, mcp__outlook__search_inbox
 argument-hint: "[person-name]"
 ---
 
 # Lookup Contact
+
+## ERROR? STOP.
+**Tool error? STOP. DO NOT WORKAROUND. DO NOT USE DIFFERENT TOOLS.** Tell user what failed. Wait.
 
 Find someone's email address by name, then optionally save it into `~/.claude/outlook-contacts.json`.
 

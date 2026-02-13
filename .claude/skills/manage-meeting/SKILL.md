@@ -1,10 +1,12 @@
 ---
 name: manage-meeting
 description: Modify existing meetings - cancel, reschedule, add/remove attendees, change rooms, add Teams links, update details. Use when user wants to edit, cancel, or change an existing meeting.
-disable-model-invocation: true
-allowed-tools: Read, mcp__outlook__list_events, mcp__outlook__update_event, mcp__outlook__delete_event, mcp__outlook__add_attendee, mcp__outlook__remove_attendee, mcp__outlook__get_attendee_status, mcp__outlook__find_available_rooms, mcp__outlook__resolve_recipient, mcp__outlook__expand_distribution_list, mcp__outlook__get_free_busy
+allowed-tools: Read, mcp__outlook__list_events, mcp__outlook__update_event, mcp__outlook__delete_event, mcp__outlook__cancel_event, mcp__outlook__add_attendee, mcp__outlook__remove_attendee, mcp__outlook__get_attendee_status, mcp__outlook__find_available_rooms, mcp__outlook__resolve_recipient, mcp__outlook__expand_distribution_list, mcp__outlook__get_free_busy
 argument-hint: "[action] [meeting name/details]"
 ---
+
+## ERROR? STOP.
+**Tool error? STOP. DO NOT WORKAROUND. DO NOT USE DIFFERENT TOOLS.** Tell user what failed. Wait.
 
 ## Preconditions
 - Outlook MCP server enabled
@@ -17,15 +19,25 @@ Use `list_events` with filters: `subjectContains`, `attendeeEmail`, `locationCon
 Always ask: **"Just this instance or the entire series?"**
 
 ## Cancel meeting
-Deletion scope depends on what ID you delete:
-- **seriesMaster ID** → deletes entire series
-- **occurrence/exception ID** → deletes just that instance
+Use `cancel_event` to cancel with custom message (notifies attendees); use `delete_event` for silent deletion.
 
-Our `list_events` uses CalendarView (date-range query) → returns **occurrence IDs**, not series masters.
+**Single occurrence of recurring meeting:**
+```
+mcp__outlook__cancel_event(eventId, occurrenceStart: "2/13/2026 10:35 AM", comment: "Your message")
+```
+Use the `start` value from `list_events` for that occurrence.
 
-**Single instance:** Query `list_events` for the target date, delete that occurrence's ID.
-**Entire series:** Query without date range or find the seriesMaster ID. If unavailable, delete each occurrence individually (not ideal).
+**Entire recurring series (with notifications):**
+```
+mcp__outlook__cancel_event(eventId, cancelSeries: true, comment: "Your message")
+```
 
+**Non-recurring meeting:**
+```
+mcp__outlook__cancel_event(eventId, comment: "Your message")
+```
+
+**Silent deletion (no notification to attendees):**
 ```
 mcp__outlook__delete_event(eventId)
 ```

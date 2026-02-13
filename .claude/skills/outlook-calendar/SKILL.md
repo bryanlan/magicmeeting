@@ -7,6 +7,9 @@ argument-hint: "[date|date-range] (optional)"
 
 # Outlook Calendar (Read-only)
 
+## ERROR? STOP.
+**Tool error? STOP. DO NOT WORKAROUND. DO NOT USE DIFFERENT TOOLS.** Tell user what failed. Wait.
+
 ## Preconditions
 - If Outlook MCP tools are missing/unavailable, have the user run:
   - `/mcp` to view server status

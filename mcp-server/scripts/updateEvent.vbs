@@ -1,13 +1,9 @@
 ' updateEvent.vbs - Updates an existing calendar event
 Option Explicit
 
-' Outlook recurrence state constants (not in utils.vbs)
-Const olApptNotRecurring = 0
-Const olApptMaster = 1
-Const olApptOccurrence = 2
-Const olApptException = 3
+' Recurrence state constants are now defined in utils.vbs
 
-' Include utility functions (defines olMeeting and other constants)
+' Include utility functions (defines olMeeting, recurrence constants, etc.)
 Dim fso, scriptDir
 Set fso = CreateObject("Scripting.FileSystemObject")
 scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)
@@ -137,9 +133,10 @@ Function ParseTimeOnly(timeStr)
 End Function
 
 ' Updates an existing calendar event with the specified properties
-' For recurring meetings, pass originalStart to identify which occurrence to modify
+' For recurring meetings, eventId must be the MASTER's EntryID and originalStart must be provided
 ' Or set updateSeries=True to update the entire series (all occurrences)
 Function UpdateCalendarEvent(eventId, subject, startDateTime, endDateTime, location, body, calendarName, originalStart, sendUpdate, updateSeries)
+    ' Use explicit error handling - check after every critical operation
     On Error Resume Next
 
     ' Create Outlook objects
@@ -148,9 +145,19 @@ Function UpdateCalendarEvent(eventId, subject, startDateTime, endDateTime, locat
 
     ' Create Outlook application
     Set outlookApp = CreateOutlookApplication()
+    If Err.Number <> 0 Then
+        OutputError "Failed to create Outlook application: " & Err.Description
+        UpdateCalendarEvent = False
+        Exit Function
+    End If
 
     ' Get MAPI namespace
     Set namespace = outlookApp.GetNamespace("MAPI")
+    If Err.Number <> 0 Then
+        OutputError "Failed to get MAPI namespace: " & Err.Description
+        UpdateCalendarEvent = False
+        Exit Function
+    End If
 
     ' Get calendar folder
     If calendarName = "" Then
@@ -160,7 +167,15 @@ Function UpdateCalendarEvent(eventId, subject, startDateTime, endDateTime, locat
     End If
 
     ' Try to get the appointment by EntryID
+    ' IMPORTANT: For recurring meetings, this should be the MASTER's EntryID
+    ' GetItemFromID always returns the master for recurring items
+    Err.Clear
     Set appointment = namespace.GetItemFromID(eventId)
+    If Err.Number <> 0 Then
+        OutputError "Failed to get item by ID: " & Err.Description
+        UpdateCalendarEvent = False
+        Exit Function
+    End If
 
     ' Check if appointment was found
     If appointment Is Nothing Then
@@ -173,18 +188,26 @@ Function UpdateCalendarEvent(eventId, subject, startDateTime, endDateTime, locat
     recState = appointment.RecurrenceState
 
     If recState = olApptMaster Then
-        ' This is a recurring series master
+        ' This is a recurring series master (expected for all recurring items via GetItemFromID)
         If updateSeries Then
             ' Update the entire series - use the master appointment directly
             Set targetAppt = appointment
         ElseIf Not IsEmpty(originalStart) Then
-            ' Get the recurrence pattern and fetch the specific occurrence
+            ' Get the recurrence pattern and fetch the specific occurrence/exception
+            Err.Clear
             Set recPattern = appointment.GetRecurrencePattern()
+            If Err.Number <> 0 Then
+                OutputError "Failed to get recurrence pattern: " & Err.Description
+                UpdateCalendarEvent = False
+                Exit Function
+            End If
+
+            ' GetOccurrence works for both normal occurrences AND exceptions
+            ' The originalStart must be the ORIGINAL scheduled time (before any modifications)
             Err.Clear
             Set targetAppt = recPattern.GetOccurrence(originalStart)
-
             If Err.Number <> 0 Or targetAppt Is Nothing Then
-                OutputError "Could not find occurrence at " & originalStart & ". Make sure originalStart matches the occurrence's ORIGINAL start date+time exactly. Error: " & Err.Description
+                OutputError "Could not find occurrence at " & originalStart & ". Make sure originalStart matches the occurrence's ORIGINAL scheduled date+time exactly (before any modifications). Error: " & Err.Description
                 UpdateCalendarEvent = False
                 Exit Function
             End If
@@ -194,11 +217,13 @@ Function UpdateCalendarEvent(eventId, subject, startDateTime, endDateTime, locat
             UpdateCalendarEvent = False
             Exit Function
         End If
-    ElseIf recState = olApptOccurrence Or recState = olApptException Then
-        ' Already have a specific occurrence or exception - use it directly
+    ElseIf recState = olApptNotRecurring Then
+        ' Non-recurring appointment - use directly
         Set targetAppt = appointment
     Else
-        ' Non-recurring appointment - use directly
+        ' olApptOccurrence or olApptException should not happen via GetItemFromID
+        ' GetItemFromID always returns the master for recurring items
+        ' If we somehow got here, try to use the item directly but warn
         Set targetAppt = appointment
     End If
 

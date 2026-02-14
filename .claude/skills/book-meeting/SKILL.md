@@ -61,26 +61,31 @@ When checking availability:
 Call:
 `mcp__outlook__get_free_busy(attendees: "{user_email};attendee1;attendee2", ...)`
 
-### 3) CRITICAL: Verify the user's calendar for each candidate day
-Before recommending any time slot:
-- Fetch the user's calendar for that specific day using `mcp__outlook__list_events(startDate, endDate)`.
-- If the tool indicates truncation (ex: `hasMore: true`), you do not have complete data - do not claim "free".
+### 3) MANDATORY: Fetch user's actual meetings
+**IMMEDIATELY after get_free_busy, call list_events for user's calendar during times other attendees are free.**
 
-### 4) Present options with real detail
-For each viable slot, show:
+`mcp__outlook__list_events(startDate, endDate)` for the candidate time window.
+
+**NEVER say "you're busy" without showing WHAT the meetings are.** The user can move their own meetings - they need to see the names to decide.
+
+### 4) Present options with ACTUAL MEETING NAMES
+For each time when other attendees are free, show:
 1) Other attendees' status (Free/Tentative/Busy)
-2) The user's meetings that overlap, with actual titles
+2) User's ACTUAL MEETING NAMES during that window
 
-**WRONG (lazy):**
-Tuesday 2/17, 11:00 AM - Tucker: Free, Hamza: Free
-Your schedule: busy 9-5
+**WRONG (DO NOT DO THIS):**
+```
+2:30 PM - Rose: Free, Alex: Free
+You: Busy
+```
 
-**RIGHT (use real titles):**
-Tuesday 2/17, 11:00 AM - Tucker: Free, Hamza: Free
-Your meetings 10:30 AM-12:00 PM:
-- 10:35-11:00: SiGMA LT Weekly
-- 11:05-11:30: Ana/Bryan sync
-- 11:35-12:00: Cassie | Bryan 1:1
+**RIGHT (ALWAYS DO THIS):**
+```
+2:30 PM - Rose: Free, Alex: Free
+Your meetings 2:00-3:00 PM:
+- 2:05-2:30: Jerry Zhou sync
+- 2:35-3:00: PMLT Budget Review
+```
 
 User decides what to move.
 

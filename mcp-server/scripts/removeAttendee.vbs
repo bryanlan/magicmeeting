@@ -1,13 +1,9 @@
 ' removeAttendee.vbs - Remove an attendee from an existing meeting
 Option Explicit
 
-' Outlook recurrence state constants
-Const olApptNotRecurring = 0
-Const olApptMaster = 1
-Const olApptOccurrence = 2
-Const olApptException = 3
+' Recurrence state constants are now defined in utils.vbs
 
-' Include utility functions
+' Include utility functions (defines olMeeting, recurrence constants, etc.)
 Dim fso, scriptDir
 Set fso = CreateObject("Scripting.FileSystemObject")
 scriptDir = fso.GetParentFolderName(WScript.ScriptFullName)

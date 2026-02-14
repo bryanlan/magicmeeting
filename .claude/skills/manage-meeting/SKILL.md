@@ -12,11 +12,36 @@ argument-hint: "[action] [meeting name/details]"
 - Outlook MCP server enabled
 - Read `~/.claude/config.md` for user/organizer email
 
+## Meeting time preferences
+When rescheduling, start **5 minutes after** the requested boundary time (e.g., "1:30" → 1:35).
+Exception: honor exact times if user says "exactly", "sharp", or gives a precise non-boundary minute.
+
 ## Find meeting first
 Use `list_events` with filters: `subjectContains`, `attendeeEmail`, `locationContains`. Confirm with user before modifying.
 
 ## Recurring meetings (critical)
 Always ask: **"Just this instance or the entire series?"**
+
+### How recurring item IDs work
+`list_events` returns these fields for recurring items:
+- `id` = **Master's EntryID** (always the series master, even for exceptions)
+- `originalStart` = **Original scheduled time** (the time to pass to GetOccurrence)
+- `start` = Current displayed time (may differ from originalStart for exceptions)
+- `recurrenceState` = `occurrence` | `exception` | `master` | `notRecurring`
+
+### Updating a single occurrence or exception
+**ALWAYS** use `id` + `originalStart` from list_events:
+```
+mcp__outlook__update_event(eventId: <id>, originalStart: <originalStart>, ...)
+```
+The `originalStart` field is pre-computed to work with Outlook's GetOccurrence API.
+
+### Updating the entire series
+```
+mcp__outlook__update_event(eventId: <id>, updateSeries: true, ...)
+```
+
+**NEVER** try to use the occurrence's EntryID directly - Outlook doesn't work that way.
 
 ## Cancel meeting
 Use `cancel_event` to cancel with custom message (notifies attendees); use `delete_event` for silent deletion.
@@ -54,11 +79,16 @@ For these operations on recurring meetings:
 | Entire series | `updateSeries: true` |
 
 ### Reschedule
+**AUTOMATICALLY check all attendee availability - NEVER ask user if they want this.**
+
 1. Find meeting
-2. Check availability with `get_free_busy` (all attendees)
-3. Present options with user's real meeting titles
-4. Confirm new time
-5. `mcp__outlook__update_event(eventId, startDate, startTime, endDate, endTime, [originalStart|updateSeries], sendUpdate: true)`
+2. **IMMEDIATELY** call `get_free_busy` for ALL attendees (extract emails from meeting)
+3. Call `list_events` for user's calendar during times other attendees are free
+4. Present options showing:
+   - Times when ALL attendees are free
+   - User's conflicting meetings by **ACTUAL NAME** (never "busy")
+5. Confirm new time
+6. `mcp__outlook__update_event(eventId, startDate, startTime, endDate, endTime, [originalStart|updateSeries], sendUpdate: true)`
 
 ### Add/remove attendee
 ```

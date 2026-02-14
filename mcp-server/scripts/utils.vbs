@@ -14,6 +14,12 @@ Const olResponseDeclined = 4
 Const olResponseTentative = 2
 Const olResponseNotResponded = 5
 
+' Recurrence state constants
+Const olApptNotRecurring = 0
+Const olApptMaster = 1
+Const olApptOccurrence = 2
+Const olApptException = 3
+
 ' Error handling constants
 Const ERROR_PREFIX = "ERROR:"
 Const SUCCESS_PREFIX = "SUCCESS:"
@@ -228,12 +234,88 @@ End Function
 ' Converts an Outlook appointment item to a JSON string
 Function AppointmentToJSON(appointment)
     Dim json, recipients, recipient, i, attendees, attendeeStatus
-    
+    Dim masterItem, masterEntryId, originalStart, recState
+
     ' Start building the JSON object
     json = "{"
-    
-    ' Include EntryID for event identification
-    json = json & """id"":""" & EscapeJSON(appointment.EntryID) & ""","
+
+    ' Get recurrence state first - we need it to determine IDs
+    recState = appointment.RecurrenceState
+
+    ' For recurring occurrences/exceptions, get the MASTER's EntryID
+    ' The occurrence's own EntryID is not reliable for updates
+    If recState = olApptOccurrence Or recState = olApptException Then
+        ' Parent returns the series master for occurrences/exceptions
+        On Error Resume Next
+        Set masterItem = appointment.Parent
+        If Not masterItem Is Nothing And TypeName(masterItem) = "AppointmentItem" Then
+            masterEntryId = masterItem.EntryID
+        Else
+            masterEntryId = appointment.EntryID
+            Set masterItem = Nothing
+        End If
+        Err.Clear
+        On Error GoTo 0
+
+        ' For occurrences, Start IS the original scheduled time
+        ' For exceptions, we need the ORIGINAL scheduled time from Exception.OriginalDate
+        If recState = olApptOccurrence Then
+            originalStart = FormatDateTime(appointment.Start)
+        Else
+            ' For exceptions, find the matching Exception via master's Exceptions collection
+            ' This gives us the authoritative OriginalDate
+            Dim rp, exs, ex, exAppt, foundOriginal, j
+            foundOriginal = False
+
+            On Error Resume Next
+            If Not masterItem Is Nothing Then
+                Set rp = masterItem.GetRecurrencePattern()
+                If Err.Number = 0 And Not rp Is Nothing Then
+                    Set exs = rp.Exceptions
+                    If Err.Number = 0 And Not exs Is Nothing Then
+                        For j = 1 To exs.Count
+                            Set ex = exs.Item(j)
+                            If ex.Deleted = False Then
+                                Set exAppt = ex.AppointmentItem
+                                ' Compare at minute granularity (seconds unreliable)
+                                If DateDiff("n", exAppt.Start, appointment.Start) = 0 Then
+                                    originalStart = FormatDateTime(ex.OriginalDate)
+                                    foundOriginal = True
+                                    Set exAppt = Nothing
+                                    Set ex = Nothing
+                                    Exit For
+                                End If
+                                Set exAppt = Nothing
+                            End If
+                            Set ex = Nothing
+                        Next
+                        Set exs = Nothing
+                    End If
+                    Set rp = Nothing
+                End If
+            End If
+            Err.Clear
+            On Error GoTo 0
+
+            If Not foundOriginal Then
+                ' Fallback: use current Start (may not work for GetOccurrence)
+                originalStart = FormatDateTime(appointment.Start)
+            End If
+        End If
+
+        ' Release master now that we're done
+        Set masterItem = Nothing
+    Else
+        ' Non-recurring or master - just use the EntryID directly
+        masterEntryId = appointment.EntryID
+        originalStart = ""
+    End If
+
+    ' Include both IDs for proper recurring meeting handling
+    json = json & """id"":""" & EscapeJSON(masterEntryId) & ""","
+    If originalStart <> "" Then
+        json = json & """originalStart"":""" & EscapeJSON(originalStart) & ""","
+    End If
     
     ' Basic properties
     json = json & """subject"":""" & EscapeJSON(appointment.Subject) & ""","
@@ -243,7 +325,21 @@ Function AppointmentToJSON(appointment)
     json = json & """body"":""" & EscapeJSON(appointment.Body) & ""","
     json = json & """organizer"":""" & EscapeJSON(appointment.Organizer) & ""","
     json = json & """isRecurring"":" & LCase(CStr(appointment.IsRecurring)) & ","
-    
+
+    ' Recurrence state (helps identify how to update this item)
+    Select Case appointment.RecurrenceState
+        Case olApptNotRecurring
+            json = json & """recurrenceState"":""notRecurring"","
+        Case olApptMaster
+            json = json & """recurrenceState"":""master"","
+        Case olApptOccurrence
+            json = json & """recurrenceState"":""occurrence"","
+        Case olApptException
+            json = json & """recurrenceState"":""exception"","
+        Case Else
+            json = json & """recurrenceState"":""unknown"","
+    End Select
+
     ' Meeting status
     json = json & """isMeeting"":" & LCase(CStr(appointment.MeetingStatus = olMeeting)) & ","
     

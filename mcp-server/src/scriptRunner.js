@@ -101,9 +101,9 @@ export async function executeScript(scriptName, params = {}) {
 
       // If we get here, something unexpected happened
       if (code !== 0) {
-        reject(new Error(`Script exited with code ${code}\n${stderr}`));
+        reject(new Error(`Script exited with code ${code}\nstderr: ${stderr}\nstdout: ${stdout}`));
       } else {
-        reject(new Error(`Unexpected script output: ${stdout}`));
+        reject(new Error(`Unexpected script output:\nstdout: ${stdout}\nstderr: ${stderr}`));
       }
     });
 

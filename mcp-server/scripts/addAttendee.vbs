@@ -20,6 +20,8 @@ Sub Main()
     attendee = GetArgument("attendee")
     attendeeType = GetArgument("type")
     sendUpdate = GetArgument("sendUpdate")
+    Dim useVcal
+    useVcal = GetArgument("forwardAsVcal")
 
     RequireArgument "eventId"
     RequireArgument "attendee"
@@ -28,15 +30,19 @@ Sub Main()
     If attendeeType = "" Then attendeeType = "required"
     ' Default to sending update
     If sendUpdate = "" Then sendUpdate = "true"
+    ' Default to proper meeting request (not VCal forward)
+    If useVcal = "" Then useVcal = "false"
 
     Dim result
-    result = AddAttendeeToMeeting(eventId, attendee, attendeeType, (LCase(sendUpdate) = "true"))
+    result = AddAttendeeToMeeting(eventId, attendee, attendeeType, (LCase(sendUpdate) = "true"), (LCase(useVcal) = "true"))
 
     OutputSuccess result
 End Sub
 
 ' Add an attendee to an existing meeting
-Function AddAttendeeToMeeting(eventId, attendeeEmail, attendeeType, sendUpdate)
+' useVcal: if true, use ForwardAsVcal (sends VCS attachment, may avoid spamming all attendees)
+'          if false (default), use .Send (proper meeting request with Accept/Decline)
+Function AddAttendeeToMeeting(eventId, attendeeEmail, attendeeType, sendUpdate, useVcal)
     On Error Resume Next
 
     Dim outlookApp, ns, appt, recip, recipType
@@ -103,50 +109,68 @@ Function AddAttendeeToMeeting(eventId, attendeeEmail, attendeeType, sendUpdate)
     Dim resolvedName
     resolvedName = recip.Name
 
-    ' Save the appointment - Exchange will send update only to the new attendee
-    ' Using Save instead of Send avoids notifying ALL attendees
-    Err.Clear
-    appt.Save
-
-    If Err.Number <> 0 Then
-        AddAttendeeToMeeting = "{""success"":false,""error"":""Failed to save: " & EscapeJSON(Err.Description) & """}"
-        Exit Function
-    End If
-
-    ' If sendUpdate is true, explicitly send invite to just the new attendee
-    ' by forwarding as vCal (Send() would notify everyone)
     If sendUpdate Then
+        If useVcal Then
+            ' VCal mode: Save first, then forward as VCal (sends VCS attachment)
+            ' May avoid spamming all attendees, but recipient gets VCS not proper invite
+            Err.Clear
+            appt.Save
+
+            If Err.Number <> 0 Then
+                AddAttendeeToMeeting = "{""success"":false,""error"":""Failed to save: " & EscapeJSON(Err.Description) & """}"
+                Exit Function
+            End If
+
+            Err.Clear
+            Dim fwdMail
+            Set fwdMail = appt.ForwardAsVcal()
+
+            If Err.Number <> 0 Then
+                AddAttendeeToMeeting = "{""success"":true,""attendeeAdded"":""" & EscapeJSON(attendeeEmail) & """,""resolvedName"":""" & EscapeJSON(resolvedName) & """,""type"":""" & attendeeType & """,""updateSent"":false,""warning"":""Attendee added but VCal forward failed: " & EscapeJSON(Err.Description) & """}"
+                Exit Function
+            End If
+
+            ' Clear recipients and add only the new attendee
+            Do While fwdMail.Recipients.Count > 0
+                fwdMail.Recipients.Remove 1
+            Loop
+            fwdMail.Recipients.Add attendeeEmail
+
+            If Not fwdMail.Recipients.ResolveAll Then
+                AddAttendeeToMeeting = "{""success"":true,""attendeeAdded"":""" & EscapeJSON(attendeeEmail) & """,""resolvedName"":""" & EscapeJSON(resolvedName) & """,""type"":""" & attendeeType & """,""updateSent"":false,""warning"":""Attendee added but could not resolve for VCal""}"
+                Set fwdMail = Nothing
+                Exit Function
+            End If
+
+            fwdMail.Send
+
+            If Err.Number <> 0 Then
+                AddAttendeeToMeeting = "{""success"":true,""attendeeAdded"":""" & EscapeJSON(attendeeEmail) & """,""resolvedName"":""" & EscapeJSON(resolvedName) & """,""type"":""" & attendeeType & """,""updateSent"":false,""warning"":""VCal send failed: " & EscapeJSON(Err.Description) & """}"
+                Set fwdMail = Nothing
+                Exit Function
+            End If
+
+            Set fwdMail = Nothing
+        Else
+            ' Default mode: Use .Send for proper meeting request with Accept/Decline buttons
+            ' This sends a real meeting update (may notify other attendees depending on Exchange)
+            Err.Clear
+            appt.Send
+
+            If Err.Number <> 0 Then
+                AddAttendeeToMeeting = "{""success"":false,""error"":""Failed to send meeting update: " & EscapeJSON(Err.Description) & """}"
+                Exit Function
+            End If
+        End If
+    Else
+        ' No update requested - just save
         Err.Clear
-        Dim fwdMail
-        Set fwdMail = appt.ForwardAsVcal()
+        appt.Save
 
         If Err.Number <> 0 Then
-            ' Save worked but forward failed - attendee is added but may not have received invite
-            AddAttendeeToMeeting = "{""success"":true,""attendeeAdded"":""" & EscapeJSON(attendeeEmail) & """,""resolvedName"":""" & EscapeJSON(resolvedName) & """,""type"":""" & attendeeType & """,""updateSent"":false,""warning"":""Attendee added but invite forward failed: " & EscapeJSON(Err.Description) & """}"
+            AddAttendeeToMeeting = "{""success"":false,""error"":""Failed to save: " & EscapeJSON(Err.Description) & """}"
             Exit Function
         End If
-
-        ' Clear recipients and add only the new attendee
-        Do While fwdMail.Recipients.Count > 0
-            fwdMail.Recipients.Remove 1
-        Loop
-        fwdMail.Recipients.Add attendeeEmail
-
-        If Not fwdMail.Recipients.ResolveAll Then
-            AddAttendeeToMeeting = "{""success"":true,""attendeeAdded"":""" & EscapeJSON(attendeeEmail) & """,""resolvedName"":""" & EscapeJSON(resolvedName) & """,""type"":""" & attendeeType & """,""updateSent"":false,""warning"":""Attendee added but could not resolve for invite""}"
-            Set fwdMail = Nothing
-            Exit Function
-        End If
-
-        fwdMail.Send
-
-        If Err.Number <> 0 Then
-            AddAttendeeToMeeting = "{""success"":true,""attendeeAdded"":""" & EscapeJSON(attendeeEmail) & """,""resolvedName"":""" & EscapeJSON(resolvedName) & """,""type"":""" & attendeeType & """,""updateSent"":false,""warning"":""Attendee added but invite send failed: " & EscapeJSON(Err.Description) & """}"
-            Set fwdMail = Nothing
-            Exit Function
-        End If
-
-        Set fwdMail = Nothing
     End If
 
     ' Build success response

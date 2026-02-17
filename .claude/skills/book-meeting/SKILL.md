@@ -14,7 +14,20 @@ argument-hint: "[who] [when] [duration] (optional)"
 - Ensure Outlook MCP server is enabled:
   - `/mcp` then `/mcp enable <server-name>` (commonly `outlook`)
 - Read `.claude/config.md` to get the user/organizer email.
+- Read `.claude/outlook-contacts.json` for address book.
 - Tool naming: this skill assumes server name `outlook` (tools look like `mcp__outlook__...`). If your server name differs, replace accordingly.
+
+---
+
+## Attendee resolution (MANDATORY)
+**ALWAYS check address book BEFORE using any attendee email.** NEVER call `create_event` or `get_free_busy` without first:
+1. Read `.claude/outlook-contacts.json`
+2. Search for each name in contacts and groups
+3. If single match → use that email
+4. If multiple matches → ask user to clarify
+5. If no match → use `resolve_recipient` or ask user for email
+
+**DO NOT guess emails. DO NOT assume email formats.**
 
 ---
 

@@ -11,6 +11,17 @@ argument-hint: "[action] [meeting name/details]"
 ## Preconditions
 - Outlook MCP server enabled
 - Read `.claude/config.md` for user/organizer email
+- Read `.claude/outlook-contacts.json` for address book
+
+## Attendee resolution (MANDATORY)
+**ALWAYS check address book BEFORE adding any attendee.** NEVER call `add_attendee` without first:
+1. Read `.claude/outlook-contacts.json`
+2. Search for the name in contacts and groups
+3. If single match → use that email
+4. If multiple matches → ask user to clarify
+5. If no match → use `resolve_recipient` or ask user for email
+
+**DO NOT guess emails. DO NOT assume email formats.**
 
 ## Meeting time preferences
 When rescheduling, start **5 minutes after** the requested boundary time (e.g., "1:30" → 1:35).
@@ -90,14 +101,16 @@ For these operations on recurring meetings:
 5. Confirm new time
 6. `mcp__outlook__update_event(eventId, startDate, startTime, endDate, endTime, [originalStart|updateSeries], sendUpdate: true)`
 
-### Add/remove attendee
+### Add/remove attendee (forwarding a meeting)
+**Default:** `add_attendee` sends a proper meeting request with Accept/Decline buttons.
 ```
 mcp__outlook__add_attendee(eventId, attendee, type: "required"|"optional"|"resource", sendUpdate: true)
 mcp__outlook__remove_attendee(eventId, attendee, sendUpdate: true)
 ```
-Add `updateSeries: true` or `originalStart` for recurring. Resolve names via `mcp__outlook__resolve_recipient` or `.claude/outlook-contacts.json`.
 
-Never forward .vcs files - use `add_attendee` instead.
+**If user says "ensure no spam" or "don't notify others":** Use `forwardAsVcal: true` - sends VCS attachment (recipient can't Accept/Decline, but may avoid notifying other attendees).
+
+Add `updateSeries: true` or `originalStart` for recurring.
 
 ### Change room
 1. `mcp__outlook__find_available_rooms(building, startDate, startTime, endTime, capacity)`

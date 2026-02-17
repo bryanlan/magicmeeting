@@ -987,13 +987,17 @@ export function defineOutlookTools() {
           sendUpdate: {
             type: 'boolean',
             description: 'Whether to send meeting invite to the new attendee (default: true)'
+          },
+          forwardAsVcal: {
+            type: 'boolean',
+            description: 'If true, sends VCS attachment instead of proper meeting request. May avoid spamming other attendees but recipient cannot Accept/Decline. Default: false (sends proper meeting request).'
           }
         },
         required: ['eventId', 'attendee']
       },
-      handler: async ({ eventId, attendee, type, sendUpdate }) => {
+      handler: async ({ eventId, attendee, type, sendUpdate, forwardAsVcal }) => {
         try {
-          const result = await addAttendee(eventId, attendee, type, sendUpdate);
+          const result = await addAttendee(eventId, attendee, type, sendUpdate, forwardAsVcal);
           return {
             content: [
               {

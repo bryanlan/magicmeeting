@@ -372,10 +372,11 @@ export async function expandDistributionList(name, recursive, maxDepth) {
  * @param {string} attendee - Email address of the attendee to add
  * @param {string} type - Attendee type: required, optional, or resource
  * @param {boolean} sendUpdate - Whether to send meeting update to the new attendee
+ * @param {boolean} forwardAsVcal - If true, sends VCS attachment instead of proper meeting request
  * @returns {Promise<Object>} - Promise that resolves with result
  */
-export async function addAttendee(eventId, attendee, type, sendUpdate) {
-  return executeScript('addAttendee', { eventId, attendee, type, sendUpdate });
+export async function addAttendee(eventId, attendee, type, sendUpdate, forwardAsVcal) {
+  return executeScript('addAttendee', { eventId, attendee, type, sendUpdate, forwardAsVcal });
 }
 
 /**

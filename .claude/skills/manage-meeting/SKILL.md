@@ -102,13 +102,20 @@ For these operations on recurring meetings:
 6. `mcp__outlook__update_event(eventId, startDate, startTime, endDate, endTime, [originalStart|updateSeries], sendUpdate: true)`
 
 ### Add/remove attendee (forwarding a meeting)
-**Default:** `add_attendee` sends a proper meeting request with Accept/Decline buttons.
+**ALWAYS ask user which method before adding:**
+
+| Method | Pros | Cons |
+|--------|------|------|
+| **Add as attendee** | Proper invite (Accept/Decline), gets updates, tracked | May notify ALL existing attendees |
+| **Forward only** | Won't spam other attendees | No Accept/Decline, no tracking, no updates |
+
+Present this choice. Then:
+- **Add as attendee:** `mcp__outlook__add_attendee(eventId, attendee, sendUpdate: true)`
+- **Forward only:** `mcp__outlook__add_attendee(eventId, attendee, sendUpdate: true, forwardAsVcal: true)`
+
 ```
-mcp__outlook__add_attendee(eventId, attendee, type: "required"|"optional"|"resource", sendUpdate: true)
 mcp__outlook__remove_attendee(eventId, attendee, sendUpdate: true)
 ```
-
-**If user says "ensure no spam" or "don't notify others":** Use `forwardAsVcal: true` - sends VCS attachment (recipient can't Accept/Decline, but may avoid notifying other attendees).
 
 Add `updateSeries: true` or `originalStart` for recurring.
 

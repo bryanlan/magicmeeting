@@ -22,7 +22,7 @@ This workspace configures Claude Code as an Outlook-centric assistant (calendar 
    - Ask the user how to proceed
    - Update or create the relevant skill file BEFORE executing the action
 3) Never create/update/delete calendar events or send emails without an explicit user confirmation step.
-4) Always read `~/.claude/config.md` early to confirm the organizer identity (name + email).
+4) Always read `.claude/config.md` early to confirm the organizer identity (name + email).
 5) When presenting calendar availability, show the user's real meeting titles (not "busy blocks") so the user can decide what to move.
 
 ## MCP server lifecycle (START / STOP / RESTART)
@@ -44,13 +44,13 @@ If OAuth/auth is required for the server, `/mcp` is also where authentication is
 
 ## Where important state lives
 
-- `~/.claude/config.md`
+- `.claude/config.md`
   - Source of truth for user identity and organizer email.
 
-- `~/.claude/outlook-contacts.json`
+- `.claude/outlook-contacts.json`
   - Address book (contacts + groups).
 
-- `~/.claude/outlook-polls.json`
+- `.claude/outlook-polls.json`
   - Availability poll tracking (if you use polls).
 
 ## Editing skills and config

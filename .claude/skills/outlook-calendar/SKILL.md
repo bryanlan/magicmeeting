@@ -14,7 +14,7 @@ argument-hint: "[date|date-range] (optional)"
 - If Outlook MCP tools are missing/unavailable, have the user run:
   - `/mcp` to view server status
   - `/mcp enable <server-name>` to start it (commonly `outlook`)
-- Read `~/.claude/config.md` to confirm the user's email/timezone.
+- Read `.claude/config.md` to confirm the user's email/timezone.
 
 ## Tool naming note
 MCP tool names are namespaced as `mcp__<server>__<tool>`.

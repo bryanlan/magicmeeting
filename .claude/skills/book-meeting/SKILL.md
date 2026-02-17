@@ -13,7 +13,7 @@ argument-hint: "[who] [when] [duration] (optional)"
 ## Preconditions
 - Ensure Outlook MCP server is enabled:
   - `/mcp` then `/mcp enable <server-name>` (commonly `outlook`)
-- Read `~/.claude/config.md` to get the user/organizer email.
+- Read `.claude/config.md` to get the user/organizer email.
 - Tool naming: this skill assumes server name `outlook` (tools look like `mcp__outlook__...`). If your server name differs, replace accordingly.
 
 ---
@@ -138,7 +138,7 @@ mcp__outlook__create_event(
 
 ---
 
-## Address book (`~/.claude/outlook-contacts.json`)
+## Address book (`.claude/outlook-contacts.json`)
 Structure:
 - `contacts[]`: name, email, aliases (array)
 - `groups[]`: name, email (DL address), aliases (array), members
@@ -164,6 +164,6 @@ Use when `get_free_busy` shows no workable common times.
 Minimal practical flow:
 1) Generate poll ID (`poll-XXXXXX`)
 2) Email options (4-8 slots) via `/send-email` skill (explicit confirm)
-3) Save state to `~/.claude/outlook-polls.json`
+3) Save state to `.claude/outlook-polls.json`
 4) When user asks "check the poll", read `outlook-polls.json` and search inbox for replies, then present a matrix and propose the best slot.
 5) When user confirms a slot, book via `create_event`.

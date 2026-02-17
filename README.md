@@ -77,7 +77,7 @@ Something not working? [Open an issue](https://github.com/bryanlan/magicmeeting/
 
 ## Tip: Local Address Book
 
-The assistant maintains a local cache at `~/.claude/outlook-contacts.json` so it knows who you mean when you say "James" or "the PM team" without having to look them up every time.
+The assistant maintains a local cache at `.claude/outlook-contacts.json` so it knows who you mean when you say "James" or "the PM team" without having to look them up every time.
 
 **How it works:**
 - First time you mention someone new, it queries the Global Address List and offers to save them
@@ -85,7 +85,7 @@ The assistant maintains a local cache at `~/.claude/outlook-contacts.json` so it
 - Groups/distribution lists can be expanded and cached locally
 
 **To add contacts manually:**
-Edit `~/.claude/outlook-contacts.json`:
+Edit `.claude/outlook-contacts.json`:
 ```json
 {
   "version": "1.2",

@@ -10,7 +10,7 @@ argument-hint: "[action] [meeting name/details]"
 
 ## Preconditions
 - Outlook MCP server enabled
-- Read `~/.claude/config.md` for user/organizer email
+- Read `.claude/config.md` for user/organizer email
 
 ## Meeting time preferences
 When rescheduling, start **5 minutes after** the requested boundary time (e.g., "1:30" → 1:35).
@@ -95,7 +95,7 @@ For these operations on recurring meetings:
 mcp__outlook__add_attendee(eventId, attendee, type: "required"|"optional"|"resource", sendUpdate: true)
 mcp__outlook__remove_attendee(eventId, attendee, sendUpdate: true)
 ```
-Add `updateSeries: true` or `originalStart` for recurring. Resolve names via `mcp__outlook__resolve_recipient` or `~/.claude/outlook-contacts.json`.
+Add `updateSeries: true` or `originalStart` for recurring. Resolve names via `mcp__outlook__resolve_recipient` or `.claude/outlook-contacts.json`.
 
 Never forward .vcs files - use `add_attendee` instead.
 

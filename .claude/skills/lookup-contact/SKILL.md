@@ -10,7 +10,7 @@ argument-hint: "[person-name]"
 ## ERROR? STOP.
 **Tool error? STOP. DO NOT WORKAROUND. DO NOT USE DIFFERENT TOOLS.** Tell user what failed. Wait.
 
-Find someone's email address by name, then optionally save it into `~/.claude/outlook-contacts.json`.
+Find someone's email address by name, then optionally save it into `.claude/outlook-contacts.json`.
 
 ## Workflow
 
@@ -37,7 +37,7 @@ Show unique contacts found:
 | 2 | John Doe | johnd@other.com | Inbox |
 
 ### 4) Add to address book (only if user confirms)
-Update `~/.claude/outlook-contacts.json`:
+Update `.claude/outlook-contacts.json`:
 
 - Normalize email to lowercase.
 - Add reasonable aliases (first name, last name, common shorthand).

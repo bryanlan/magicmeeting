@@ -247,7 +247,23 @@ Function CreateCalendarEvent(subject, startDateTime, endDateTime, location, body
 
         ' Enable Teams meeting if requested - use UI automation
         If isTeamsMeeting Then
-            ' Display the appointment to access the ribbon (don't save first)
+            ' CRITICAL: Save first to get EntryID before UI automation
+            ' EntryID is only populated after Save, and UI automation can invalidate the COM reference
+            appointment.Save
+            If Err.Number <> 0 Then
+                OutputError "Failed to save meeting before Teams setup: " & Err.Description
+                WScript.Quit 1
+            End If
+
+            ' Capture EntryID NOW, before UI automation potentially invalidates the object
+            Dim capturedEntryId
+            capturedEntryId = appointment.EntryID
+            If capturedEntryId = "" Then
+                OutputError "Meeting was not created (empty EntryID after save)"
+                WScript.Quit 1
+            End If
+
+            ' Display the appointment to access the ribbon
             appointment.Display
 
             ' Give Outlook time to fully render the window
@@ -269,17 +285,38 @@ Function CreateCalendarEvent(subject, startDateTime, endDateTime, location, body
             wshShell.SendKeys "TM" ' Teams Meeting
             WScript.Sleep 2500     ' Wait for Teams to generate the link
 
-            ' Use Alt+S to Send (avoids Ctrl+Enter dialog)
-            wshShell.SendKeys "%S"
+            ' Close the inspector window (Escape) - we'll send programmatically
+            wshShell.SendKeys "{ESCAPE}"
             WScript.Sleep 500
 
-            ' Press Enter to dismiss any confirmation dialogs
-            wshShell.SendKeys "{ENTER}"
-            WScript.Sleep 300
-            wshShell.SendKeys "{ENTER}"
-            WScript.Sleep 300
-
             Set wshShell = Nothing
+
+            ' Re-fetch the appointment by EntryID to get fresh object with Teams changes
+            Dim sentAppt
+            Set sentAppt = namespace.GetItemFromID(capturedEntryId)
+            If sentAppt Is Nothing Then
+                OutputError "Could not retrieve appointment after Teams setup"
+                WScript.Quit 1
+            End If
+
+            ' Save to persist Teams changes, then Send programmatically
+            sentAppt.Save
+            If Err.Number <> 0 Then
+                OutputError "Failed to save after Teams setup: " & Err.Description
+                WScript.Quit 1
+            End If
+
+            sentAppt.Send
+            If Err.Number <> 0 Then
+                OutputError "Failed to send meeting: " & Err.Description
+                WScript.Quit 1
+            End If
+
+            Set sentAppt = Nothing
+
+            ' Return the captured EntryID
+            CreateCalendarEvent = capturedEntryId
+            Exit Function
         Else
             ' Save first to get EntryID, then send
             appointment.Save

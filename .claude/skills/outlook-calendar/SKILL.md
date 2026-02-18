@@ -57,3 +57,14 @@ If your server name differs, replace accordingly.
   - Candidate slots
   - Who is Free/Tentative/Busy per slot
 - If the user's calendar detail is needed for a candidate slot, also call `list_events` for that day so you can show meeting titles.
+
+**CORRECT:** User asks "find time Monday with Jane"
+1. `get_free_busy` for Jane on Monday → find slots where Jane is Free/Tentative
+2. `list_events` for user on Monday → get user's actual meeting titles
+3. Present:
+   - "Jane free 10-11am. You have: Project Review"
+   - "Jane free 2-3pm. You have: Focus Time"
+
+**INCORRECT #1:** Only show user's calendar and say "you're free at X" — useless without knowing if Jane is available.
+
+**INCORRECT #2:** Say "Jane free 10-11am. You are Busy." — useless without stating WHAT user is busy with so they can decide whether to move it.

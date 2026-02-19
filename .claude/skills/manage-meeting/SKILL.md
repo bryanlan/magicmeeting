@@ -99,7 +99,12 @@ For these operations on recurring meetings:
    - Times when ALL attendees are free
    - User's conflicting meetings by **ACTUAL NAME** (never "busy")
 5. Confirm new time
-6. `mcp__outlook__update_event(eventId, startDate, startTime, endDate, endTime, [originalStart|updateSeries], sendUpdate: true)`
+6. **PRE-FLIGHT CHECKLIST** before calling update_event:
+   - [ ] Start time ends in :05 or :35? (e.g., 2pm → 2:05 PM)
+   - [ ] Duration preserved from original meeting?
+   - [ ] Using correct originalStart or updateSeries for recurring?
+   - [ ] sendUpdate: true?
+7. `mcp__outlook__update_event(eventId, startDate, startTime, endDate, endTime, [originalStart|updateSeries], sendUpdate: true)`
 
 ### Add/remove attendee (forwarding a meeting)
 **ALWAYS ask user which method before adding:**
